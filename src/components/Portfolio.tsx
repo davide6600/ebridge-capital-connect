@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -12,8 +13,11 @@ import {
   Eye,
   Download
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import PortfolioAnalytics from "./PortfolioAnalytics";
 
 const Portfolio = () => {
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const totalValue = 125430.50;
   const dailyChange = 2847.32;
   const dailyChangePercent = 2.32;
@@ -78,6 +82,54 @@ const Portfolio = () => {
     }
   ];
 
+  const handleExportReport = () => {
+    // Generate portfolio report data
+    const reportData = {
+      totalValue,
+      dailyChange,
+      dailyChangePercent,
+      holdings,
+      transactions,
+      generatedAt: new Date().toISOString()
+    };
+
+    // Create CSV content
+    const csvContent = [
+      ['Portfolio Report - Generated on', new Date().toLocaleDateString()],
+      [''],
+      ['Summary'],
+      ['Total Portfolio Value', `$${totalValue.toLocaleString()}`],
+      ['Daily Change', `$${dailyChange.toLocaleString()}`],
+      ['Daily Change %', `${dailyChangePercent}%`],
+      [''],
+      ['Holdings'],
+      ['Symbol', 'Name', 'Amount', 'Value', 'Change %', 'Allocation %'],
+      ...holdings.map(h => [h.symbol, h.name, h.amount, `$${h.value.toLocaleString()}`, `${h.change}%`, `${h.allocation}%`]),
+      [''],
+      ['Recent Transactions'],
+      ['Type', 'Asset', 'Amount', 'Price', 'Date', 'Status'],
+      ...transactions.map(t => [t.type, t.asset, t.amount, `$${t.price.toLocaleString()}`, t.date, t.status])
+    ].map(row => row.join(',')).join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `portfolio-report-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Report Exported",
+      description: "Your portfolio report has been downloaded successfully.",
+    });
+  };
+
+  if (showAnalytics) {
+    return <PortfolioAnalytics onBack={() => setShowAnalytics(false)} />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Portfolio Header */}
@@ -87,11 +139,11 @@ const Portfolio = () => {
           <p className="text-gray-600 mt-1">Track your investment performance and allocation</p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportReport}>
             <Download className="mr-2 h-4 w-4" />
             Export Report
           </Button>
-          <Button>
+          <Button onClick={() => setShowAnalytics(true)}>
             <Eye className="mr-2 h-4 w-4" />
             View Analytics
           </Button>
