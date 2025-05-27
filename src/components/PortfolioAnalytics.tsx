@@ -21,13 +21,11 @@ const PortfolioAnalytics = ({ onBack }: PortfolioAnalyticsProps) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        // Fallback to static data when not authenticated
         setTransactions(getStaticTransactions());
         setLoading(false);
         return;
       }
 
-      // Always use static data since database tables may not exist
       setTransactions(getStaticTransactions());
       setLoading(false);
     } catch (error) {
@@ -37,7 +35,6 @@ const PortfolioAnalytics = ({ onBack }: PortfolioAnalyticsProps) => {
     }
   };
 
-  // Static transactions as fallback
   const getStaticTransactions = () => [
     {
       id: "TX-001",
@@ -144,7 +141,7 @@ const PortfolioAnalytics = ({ onBack }: PortfolioAnalyticsProps) => {
             ))}
           </div>
         </CardContent>
-      </div>
+      </Card>
     </div>
   );
 };
