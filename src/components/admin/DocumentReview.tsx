@@ -44,13 +44,21 @@ const DocumentReview = () => {
 
   const loadDocuments = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('client_documents')
         .select('*')
         .order('upload_date', { ascending: false });
 
-      if (error) throw error;
-      setDocuments(data || []);
+      if (error) {
+        console.error('Error loading documents:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load documents",
+          variant: "destructive"
+        });
+      } else {
+        setDocuments(data || []);
+      }
     } catch (error) {
       console.error('Error loading documents:', error);
       toast({
@@ -65,7 +73,7 @@ const DocumentReview = () => {
 
   const handleApprove = async (docId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('client_documents')
         .update({ 
           status: 'approved',
@@ -73,7 +81,15 @@ const DocumentReview = () => {
         })
         .eq('id', docId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error approving document:', error);
+        toast({
+          title: "Error",
+          description: "Failed to approve document",
+          variant: "destructive"
+        });
+        return;
+      }
       
       toast({
         title: "Document Approved",
@@ -93,7 +109,7 @@ const DocumentReview = () => {
 
   const handleReject = async (docId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('client_documents')
         .update({ 
           status: 'rejected',
@@ -102,7 +118,15 @@ const DocumentReview = () => {
         })
         .eq('id', docId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error rejecting document:', error);
+        toast({
+          title: "Error",
+          description: "Failed to reject document",
+          variant: "destructive"
+        });
+        return;
+      }
       
       toast({
         title: "Document Rejected",

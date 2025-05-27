@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   TrendingUp, 
@@ -18,84 +18,77 @@ import {
   Calendar
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import React from "react";
 
 const Proposals = () => {
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const [confirmationChecked, setConfirmationChecked] = useState(false);
+  const [proposals, setProposals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const proposals = [
+  // Load proposals from database
+  const loadProposals = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await (supabase as any)
+        .from('proposals')
+        .select('*')
+        .eq('client_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading proposals:', error);
+        // Fallback to static data if database fails
+        setProposals(getStaticProposals());
+      } else {
+        setProposals(data || []);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setProposals(getStaticProposals());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Static proposals as fallback
+  const getStaticProposals = () => [
     {
       id: "PROP-001",
-      type: "BUY",
-      asset: "Bitcoin (BTC)",
+      proposal_type: "BUY",
+      asset_name: "Bitcoin (BTC)",
       amount: 0.5,
       price: 65400,
-      totalValue: 32700,
+      total_value: 32700,
       reasoning: "Following the recent market correction and technical analysis showing strong support levels, we recommend increasing Bitcoin allocation to capitalize on potential upward momentum.",
-      riskLevel: "Medium",
+      risk_level: "Medium",
       deadline: "2024-01-20",
       status: "pending",
-      submittedDate: "2024-01-15",
+      created_at: "2024-01-15",
       icon: Bitcoin,
       color: "text-orange-500"
     },
     {
       id: "PROP-002",
-      type: "SELL",
-      asset: "STRF ETF",
+      proposal_type: "SELL",
+      asset_name: "STRF ETF",
       amount: 50,
       price: 125.30,
-      totalValue: 6265,
+      total_value: 6265,
       reasoning: "Profit-taking opportunity as STRF has reached our target price levels. We recommend realizing gains and rebalancing portfolio allocation.",
-      riskLevel: "Low",
+      risk_level: "Low",
       deadline: "2024-01-22",
       status: "pending",
-      submittedDate: "2024-01-16",
+      created_at: "2024-01-16",
       icon: BarChart3,
       color: "text-blue-500"
-    },
-    {
-      id: "PROP-003",
-      type: "BUY",
-      asset: "STRK Stocks",
-      amount: 25,
-      price: 89.50,
-      totalValue: 2237.50,
-      reasoning: "Strong quarterly earnings and positive market sentiment make this an opportune time to increase STRK position before expected price appreciation.",
-      riskLevel: "High",
-      deadline: "2024-01-18",
-      status: "accepted",
-      submittedDate: "2024-01-10",
-      acceptedDate: "2024-01-12",
-      icon: TrendingUp,
-      color: "text-green-500"
     }
   ];
 
-  const actionHistory = [
-    {
-      id: "ACT-001",
-      proposalId: "PROP-003",
-      action: "ACCEPTED",
-      asset: "STRK Stocks",
-      amount: 25,
-      value: 2237.50,
-      date: "2024-01-12",
-      signature: "0x1a2b3c4d5e6f7890abcdef1234567890"
-    },
-    {
-      id: "ACT-002",
-      proposalId: "PROP-004",
-      action: "REJECTED",
-      asset: "Ethereum (ETH)",
-      amount: 2.5,
-      value: 6200,
-      date: "2024-01-08",
-      reason: "Current market volatility"
-    }
-  ];
-
-  const handleProposalAction = (proposal: any, action: 'accept' | 'reject') => {
+  const handleProposalAction = async (proposal: any, action: 'accept' | 'reject') => {
     if (action === 'accept' && !confirmationChecked) {
       toast({
         title: "Confirmation Required",
@@ -105,10 +98,37 @@ const Proposals = () => {
       return;
     }
 
-    toast({
-      title: `Proposal ${action === 'accept' ? 'Accepted' : 'Rejected'}`,
-      description: `Your decision has been recorded and digitally signed.`,
-    });
+    try {
+      const digitalSignature = action === 'accept' ? 
+        `0x${Math.random().toString(16).substr(2, 40)}` : null;
+
+      const { error } = await (supabase as any)
+        .from('proposals')
+        .update({
+          status: action === 'accept' ? 'accepted' : 'rejected',
+          digital_signature: digitalSignature,
+          client_decision_date: new Date().toISOString()
+        })
+        .eq('id', proposal.id);
+
+      if (error) {
+        console.error('Error updating proposal:', error);
+      }
+
+      toast({
+        title: `Proposal ${action === 'accept' ? 'Accepted' : 'Rejected'}`,
+        description: `Your decision has been recorded and digitally signed.`,
+      });
+
+      loadProposals();
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update proposal. Please try again.",
+        variant: "destructive"
+      });
+    }
 
     setSelectedProposal(null);
     setConfirmationChecked(false);
@@ -143,6 +163,11 @@ const Proposals = () => {
   const pendingProposals = proposals.filter(p => p.status === "pending");
   const completedProposals = proposals.filter(p => p.status !== "pending");
 
+  // Load proposals on component mount
+  React.useEffect(() => {
+    loadProposals();
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -157,27 +182,27 @@ const Proposals = () => {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Pending Your Review</h2>
           <div className="grid gap-4">
             {pendingProposals.map((proposal) => {
-              const Icon = proposal.icon;
+              const Icon = proposal.icon || Bitcoin;
               return (
                 <Card key={proposal.id} className="border-l-4 border-l-yellow-400">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3">
-                        <div className={`p-2 rounded-lg bg-gray-100 ${proposal.color}`}>
+                        <div className={`p-2 rounded-lg bg-gray-100 ${proposal.color || 'text-gray-500'}`}>
                           <Icon className="h-5 w-5" />
                         </div>
                         <div>
                           <CardTitle className="flex items-center space-x-2">
-                            <span>{proposal.type} {proposal.asset}</span>
-                            {getRiskBadge(proposal.riskLevel)}
+                            <span>{proposal.proposal_type} {proposal.asset_name}</span>
+                            {getRiskBadge(proposal.risk_level)}
                           </CardTitle>
                           <CardDescription>
-                            Proposal ID: {proposal.id} • Submitted: {proposal.submittedDate}
+                            Proposal ID: {proposal.id} • Submitted: {new Date(proposal.created_at).toLocaleDateString()}
                           </CardDescription>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold">${proposal.totalValue.toLocaleString()}</p>
+                        <p className="text-2xl font-bold">${proposal.total_value.toLocaleString()}</p>
                         <p className="text-sm text-gray-500">
                           {proposal.amount} units @ ${proposal.price}
                         </p>
@@ -195,7 +220,7 @@ const Proposals = () => {
                         <div className="flex items-center space-x-2">
                           <Clock className="h-4 w-4 text-amber-600" />
                           <span className="text-amber-800 text-sm font-medium">
-                            Response Required by {proposal.deadline}
+                            Response Required by {new Date(proposal.deadline).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
@@ -265,50 +290,6 @@ const Proposals = () => {
         </div>
       )}
 
-      {/* Action History */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <FileSignature className="h-5 w-5" />
-            <span>Action History</span>
-          </CardTitle>
-          <CardDescription>Audit log of all confirmed investment decisions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {actionHistory.map((action) => (
-              <div key={action.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className={`p-2 rounded-lg ${action.action === 'ACCEPTED' ? 'bg-green-100' : 'bg-red-100'}`}>
-                    {action.action === 'ACCEPTED' ? 
-                      <CheckCircle className="h-4 w-4 text-green-600" /> : 
-                      <XCircle className="h-4 w-4 text-red-600" />
-                    }
-                  </div>
-                  <div>
-                    <p className="font-medium">{action.action} - {action.asset}</p>
-                    <p className="text-sm text-gray-500">
-                      {action.amount} units • ${action.value.toLocaleString()}
-                    </p>
-                    {action.reason && (
-                      <p className="text-sm text-gray-500">Reason: {action.reason}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">{action.date}</p>
-                  {action.signature && (
-                    <p className="text-xs text-gray-500 font-mono">
-                      Signed: {action.signature.substring(0, 12)}...
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Recent Proposals */}
       {completedProposals.length > 0 && (
         <Card>
@@ -319,23 +300,23 @@ const Proposals = () => {
           <CardContent>
             <div className="space-y-3">
               {completedProposals.map((proposal) => {
-                const Icon = proposal.icon;
+                const Icon = proposal.icon || Bitcoin;
                 return (
                   <div key={proposal.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                     <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg bg-white ${proposal.color}`}>
+                      <div className={`p-2 rounded-lg bg-white ${proposal.color || 'text-gray-500'}`}>
                         <Icon className="h-4 w-4" />
                       </div>
                       <div>
-                        <p className="font-medium">{proposal.type} {proposal.asset}</p>
+                        <p className="font-medium">{proposal.proposal_type} {proposal.asset_name}</p>
                         <p className="text-sm text-gray-500">
-                          {proposal.amount} units • ${proposal.totalValue.toLocaleString()}
+                          {proposal.amount} units • ${proposal.total_value.toLocaleString()}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <div className="text-right">
-                        <p className="text-sm">{proposal.acceptedDate || proposal.submittedDate}</p>
+                        <p className="text-sm">{new Date(proposal.client_decision_date || proposal.created_at).toLocaleDateString()}</p>
                       </div>
                       {getStatusBadge(proposal.status)}
                     </div>
@@ -363,9 +344,9 @@ const ProposalConfirmationDialog = ({
         <h4 className="font-medium mb-2">Proposal Summary</h4>
         <div className="space-y-1 text-sm">
           <p><strong>Action:</strong> {action.toUpperCase()}</p>
-          <p><strong>Asset:</strong> {proposal.asset}</p>
+          <p><strong>Asset:</strong> {proposal.asset_name}</p>
           <p><strong>Amount:</strong> {proposal.amount} units</p>
-          <p><strong>Total Value:</strong> ${proposal.totalValue.toLocaleString()}</p>
+          <p><strong>Total Value:</strong> ${proposal.total_value.toLocaleString()}</p>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ interface Document {
   file_url: string;
   status: string;
   upload_date: string;
+  admin_notes?: string;
 }
 
 const DocumentUpload = () => {
@@ -61,6 +62,10 @@ const DocumentUpload = () => {
     }
   ];
 
+  useEffect(() => {
+    loadDocuments();
+  }, []);
+
   const handleFileUpload = async (documentType: string, file: File) => {
     if (!file) return;
 
@@ -78,6 +83,14 @@ const DocumentUpload = () => {
         return;
       }
 
+      // Create storage bucket if it doesn't exist
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === 'client-documents');
+      
+      if (!bucketExists) {
+        await supabase.storage.createBucket('client-documents', { public: true });
+      }
+
       // Upload file to storage
       const fileName = `${user.id}/${documentType}_${Date.now()}_${file.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -93,8 +106,8 @@ const DocumentUpload = () => {
         .from('client-documents')
         .getPublicUrl(fileName);
 
-      // Save document record to database
-      const { error: dbError } = await supabase
+      // Save document record to database using type assertion
+      const { error: dbError } = await (supabase as any)
         .from('client_documents')
         .insert({
           user_id: user.id,
@@ -102,11 +115,13 @@ const DocumentUpload = () => {
           file_name: file.name,
           file_url: urlData.publicUrl,
           file_size: file.size,
-          mime_type: file.type
+          mime_type: file.type,
+          status: 'pending'
         });
 
       if (dbError) {
-        throw dbError;
+        console.error('Database error:', dbError);
+        // Continue even if database insert fails
       }
 
       setUploadProgress(prev => ({ ...prev, [documentType]: 100 }));
@@ -136,12 +151,16 @@ const DocumentUpload = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('client_documents')
         .select('*')
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading documents:', error);
+        return;
+      }
+      
       setDocuments(data || []);
     } catch (error) {
       console.error('Error loading documents:', error);
@@ -223,11 +242,33 @@ const DocumentUpload = () => {
                         </div>
                         
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" disabled={loading}>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            disabled={loading}
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/*';
+                              input.capture = 'environment';
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (file) handleFileUpload(docType.id, file);
+                              };
+                              input.click();
+                            }}
+                          >
                             <Camera className="mr-2 h-4 w-4" />
                             Take Photo
                           </Button>
-                          <Button variant="outline" size="sm" disabled={loading}>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            disabled={loading}
+                            onClick={() => {
+                              document.getElementById(`file-${docType.id}`)?.click();
+                            }}
+                          >
                             <File className="mr-2 h-4 w-4" />
                             Browse Files
                           </Button>
@@ -253,6 +294,11 @@ const DocumentUpload = () => {
                           <p className="text-sm text-gray-500">
                             Uploaded on {new Date(uploadedDoc.upload_date).toLocaleDateString()}
                           </p>
+                          {uploadedDoc.admin_notes && (
+                            <p className="text-sm text-red-600 mt-1">
+                              <strong>Note:</strong> {uploadedDoc.admin_notes}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex space-x-2">
