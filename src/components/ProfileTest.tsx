@@ -1,7 +1,7 @@
-// src/components/ProfileTest.tsx
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+
+import { useState } from 'react'
+import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from '@/components/AuthProvider'
 
 export function ProfileTest() {
   const { user } = useAuth()
