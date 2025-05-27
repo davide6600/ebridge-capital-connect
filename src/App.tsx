@@ -33,6 +33,8 @@ const App = () => (
 );
 
 
+export default App;
+
 function App() {
   const { user, loading } = useAuth()
 
@@ -65,5 +67,4 @@ function App() {
   )
 }
 
-export default App
 export default App;
