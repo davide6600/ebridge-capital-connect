@@ -27,28 +27,12 @@ const PortfolioAnalytics = ({ onBack }: PortfolioAnalyticsProps) => {
         return;
       }
 
-      // Try to load from database, fallback to static data if tables don't exist
-      try {
-        const { data, error } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('executed_at', { ascending: false });
-
-        if (error) {
-          console.log('Database not available, using static data:', error);
-          setTransactions(getStaticTransactions());
-        } else {
-          setTransactions(data || []);
-        }
-      } catch (dbError) {
-        console.log('Database tables not created yet, using static data');
-        setTransactions(getStaticTransactions());
-      }
+      // Always use static data since database tables may not exist
+      setTransactions(getStaticTransactions());
+      setLoading(false);
     } catch (error) {
       console.error('Error loading transactions:', error);
       setTransactions(getStaticTransactions());
-    } finally {
       setLoading(false);
     }
   };
@@ -160,7 +144,7 @@ const PortfolioAnalytics = ({ onBack }: PortfolioAnalyticsProps) => {
             ))}
           </div>
         </CardContent>
-      </Card>
+      </div>
     </div>
   );
 };

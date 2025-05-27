@@ -1,28 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Clock, 
-  CheckCircle, 
-  XCircle,
-  Bitcoin,
-  BarChart3,
-  AlertTriangle,
-  FileSignature,
-  Calendar
-} from "lucide-react";
+import { FileText, CheckCircle, XCircle, Clock, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const Proposals = () => {
-  const [selectedProposal, setSelectedProposal] = useState<any>(null);
-  const [confirmationChecked, setConfirmationChecked] = useState(false);
   const [proposals, setProposals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,408 +24,247 @@ const Proposals = () => {
         return;
       }
 
-      // Try to load from database, fallback to static data if tables don't exist
-      try {
-        const { data, error } = await supabase
-          .from('proposals')
-          .select('*')
-          .eq('client_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.log('Database not available, using static data:', error);
-          setProposals(getStaticProposals());
-        } else {
-          setProposals(data || getStaticProposals());
-        }
-      } catch (dbError) {
-        console.log('Database tables not created yet, using static data');
-        setProposals(getStaticProposals());
-      }
-    } catch (error) {
-      console.error('Error:', error);
+      // Always use static data since database tables may not exist
       setProposals(getStaticProposals());
-    } finally {
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading proposals:', error);
+      setProposals(getStaticProposals());
       setLoading(false);
     }
   };
 
-  // Static proposals as fallback
+  // Static proposals data
   const getStaticProposals = () => [
     {
       id: "PROP-001",
-      proposal_type: "BUY",
-      asset_name: "Bitcoin (BTC)",
-      amount: 0.5,
-      price: 65400,
-      total_value: 32700,
-      reasoning: "Following the recent market correction and technical analysis showing strong support levels, we recommend increasing Bitcoin allocation to capitalize on potential upward momentum.",
-      risk_level: "Medium",
-      deadline: "2024-01-20",
+      title: "Bitcoin Investment Strategy 2024",
+      description: "Diversified cryptocurrency portfolio focusing on Bitcoin and major altcoins",
       status: "pending",
-      created_at: "2024-01-15",
-      icon: Bitcoin,
-      color: "text-orange-500"
+      created_at: "2024-01-10T09:00:00Z",
+      investment_amount: 50000,
+      expected_return: "12-18%",
+      risk_level: "Medium",
+      file_url: null
     },
     {
-      id: "PROP-002",
-      proposal_type: "SELL",
-      asset_name: "STRF ETF",
-      amount: 50,
-      price: 125.30,
-      total_value: 6265,
-      reasoning: "Profit-taking opportunity as STRF has reached our target price levels. We recommend realizing gains and rebalancing portfolio allocation.",
+      id: "PROP-002", 
+      title: "STRF ETF Allocation",
+      description: "Strategic allocation to emerging market ETFs with focus on technology sector",
+      status: "approved",
+      created_at: "2024-01-05T14:30:00Z",
+      investment_amount: 25000,
+      expected_return: "8-12%",
       risk_level: "Low",
-      deadline: "2024-01-22",
-      status: "pending",
-      created_at: "2024-01-16",
-      icon: BarChart3,
-      color: "text-blue-500"
+      file_url: null,
+      digital_signature: "John Doe - 2024-01-08T16:45:00Z",
+      client_decision_date: "2024-01-08T16:45:00Z"
+    },
+    {
+      id: "PROP-003",
+      title: "STRK Stock Portfolio",
+      description: "Blue-chip stock selection with dividend focus for long-term growth",
+      status: "rejected", 
+      created_at: "2023-12-20T11:15:00Z",
+      investment_amount: 75000,
+      expected_return: "6-10%",
+      risk_level: "Low",
+      file_url: null,
+      client_decision_date: "2023-12-22T09:30:00Z"
     }
   ];
 
-  const handleProposalAction = async (proposal: any, action: 'accept' | 'reject') => {
-    if (action === 'accept' && !confirmationChecked) {
-      toast({
-        title: "Confirmation Required",
-        description: "Please confirm that you understand the legal implications.",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const handleAcceptProposal = async (proposalId: string) => {
     try {
-      const digitalSignature = action === 'accept' ? 
-        `0x${Math.random().toString(16).substr(2, 40)}` : null;
-
-      // Try to update in database, fallback to local state update
-      try {
-        const { error } = await supabase
-          .from('proposals')
-          .update({
-            status: action === 'accept' ? 'accepted' : 'rejected',
-            digital_signature: digitalSignature,
-            client_decision_date: new Date().toISOString()
-          } as any)
-          .eq('id', proposal.id);
-
-        if (error) {
-          console.log('Database update failed, updating local state only:', error);
-          updateLocalProposalStatus(proposal.id, action, digitalSignature);
-        }
-      } catch (dbError) {
-        console.log('Database tables not available, updating local state only');
-        updateLocalProposalStatus(proposal.id, action, digitalSignature);
-      }
+      // In a real app, this would update the database
+      setProposals(prev => 
+        prev.map(p => 
+          p.id === proposalId 
+            ? { 
+                ...p, 
+                status: "approved",
+                digital_signature: "Digital Signature Applied",
+                client_decision_date: new Date().toISOString()
+              }
+            : p
+        )
+      );
 
       toast({
-        title: `Proposal ${action === 'accept' ? 'Accepted' : 'Rejected'}`,
-        description: `Your decision has been recorded and digitally signed.`,
+        title: "Proposal Accepted",
+        description: "Your digital signature has been applied.",
       });
-
-      loadProposals();
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error accepting proposal:', error);
       toast({
         title: "Error",
-        description: "Failed to update proposal. Please try again.",
-        variant: "destructive"
+        description: "Failed to accept proposal. Please try again.",
+        variant: "destructive",
       });
     }
-
-    setSelectedProposal(null);
-    setConfirmationChecked(false);
   };
 
-  const updateLocalProposalStatus = (proposalId: string, action: 'accept' | 'reject', digitalSignature: string | null) => {
-    setProposals(prevProposals => 
-      prevProposals.map(p => 
-        p.id === proposalId 
-          ? {
-              ...p,
-              status: action === 'accept' ? 'accepted' : 'rejected',
-              digital_signature: digitalSignature,
-              client_decision_date: new Date().toISOString()
-            }
-          : p
-      )
-    );
+  const handleRejectProposal = async (proposalId: string) => {
+    try {
+      // In a real app, this would update the database
+      setProposals(prev => 
+        prev.map(p => 
+          p.id === proposalId 
+            ? { 
+                ...p, 
+                status: "rejected",
+                client_decision_date: new Date().toISOString()
+              }
+            : p
+        )
+      );
+
+      toast({
+        title: "Proposal Rejected",
+        description: "The proposal has been declined.",
+      });
+    } catch (error) {
+      console.error('Error rejecting proposal:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to reject proposal. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "approved":
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case "rejected":
+        return <XCircle className="h-5 w-5 text-red-500" />;
+      default:
+        return <Clock className="h-5 w-5 text-yellow-500" />;
+    }
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending Review</Badge>;
-      case "accepted":
-        return <Badge className="bg-green-100 text-green-800">Accepted</Badge>;
-      case "rejected":
-        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
-
-  const getRiskBadge = (risk: string) => {
-    switch (risk) {
-      case "Low":
-        return <Badge className="bg-green-100 text-green-800">Low Risk</Badge>;
-      case "Medium":
-        return <Badge className="bg-yellow-100 text-yellow-800">Medium Risk</Badge>;
-      case "High":
-        return <Badge className="bg-red-100 text-red-800">High Risk</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
-
-  const getAssetIcon = (assetName: string) => {
-    if (assetName.includes("Bitcoin") || assetName.includes("BTC")) {
-      return Bitcoin;
-    } else if (assetName.includes("ETF")) {
-      return BarChart3;
-    } else {
-      return TrendingUp;
-    }
+    const variants = {
+      pending: "default" as const,
+      approved: "default" as const, 
+      rejected: "destructive" as const
+    };
+    
+    return (
+      <Badge variant={variants[status as keyof typeof variants] || "default"}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+    );
   };
 
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading proposals...</div>;
   }
 
-  const pendingProposals = proposals.filter(p => p.status === "pending");
-  const completedProposals = proposals.filter(p => p.status !== "pending");
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Investment Proposals</h1>
-        <p className="text-gray-600 mt-1">Review and respond to investment recommendations</p>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Investment Proposals</h2>
+        <div className="text-sm text-gray-500">
+          {proposals.length} proposal{proposals.length !== 1 ? 's' : ''} total
+        </div>
       </div>
 
-      {/* Pending Proposals */}
-      {pendingProposals.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Pending Your Review</h2>
-          <div className="grid gap-4">
-            {pendingProposals.map((proposal) => {
-              const Icon = getAssetIcon(proposal.asset_name);
-              return (
-                <Card key={proposal.id} className="border-l-4 border-l-yellow-400">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3">
-                        <div className="p-2 rounded-lg bg-gray-100">
-                          <Icon className="h-5 w-5 text-orange-500" />
-                        </div>
-                        <div>
-                          <CardTitle className="flex items-center space-x-2">
-                            <span>{proposal.proposal_type} {proposal.asset_name}</span>
-                            {getRiskBadge(proposal.risk_level)}
-                          </CardTitle>
-                          <CardDescription>
-                            Proposal ID: {proposal.id} • Submitted: {new Date(proposal.created_at).toLocaleDateString()}
-                          </CardDescription>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold">${parseFloat(proposal.total_value).toLocaleString()}</p>
-                        <p className="text-sm text-gray-500">
-                          {proposal.amount} units @ ${proposal.price}
-                        </p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Investment Rationale</h4>
-                        <p className="text-gray-600 text-sm">{proposal.reasoning}</p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4 text-amber-600" />
-                          <span className="text-amber-800 text-sm font-medium">
-                            Response Required by {new Date(proposal.deadline).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex space-x-3">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              className="flex-1 bg-green-600 hover:bg-green-700"
-                              onClick={() => setSelectedProposal({ ...proposal, action: 'accept' })}
-                            >
-                              <CheckCircle className="mr-2 h-4 w-4" />
-                              Accept Proposal
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Confirm Investment Decision</DialogTitle>
-                              <DialogDescription>
-                                Please review the proposal details and confirm your decision.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <ProposalConfirmationDialog 
-                              proposal={proposal}
-                              action="accept"
-                              onConfirm={handleProposalAction}
-                              confirmationChecked={confirmationChecked}
-                              setConfirmationChecked={setConfirmationChecked}
-                            />
-                          </DialogContent>
-                        </Dialog>
-
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
-                              onClick={() => setSelectedProposal({ ...proposal, action: 'reject' })}
-                            >
-                              <XCircle className="mr-2 h-4 w-4" />
-                              Reject Proposal
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Reject Investment Proposal</DialogTitle>
-                              <DialogDescription>
-                                Are you sure you want to reject this investment proposal?
-                              </DialogDescription>
-                            </DialogHeader>
-                            <ProposalConfirmationDialog 
-                              proposal={proposal}
-                              action="reject"
-                              onConfirm={handleProposalAction}
-                              confirmationChecked={confirmationChecked}
-                              setConfirmationChecked={setConfirmationChecked}
-                            />
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Recent Proposals */}
-      {completedProposals.length > 0 && (
+      {proposals.length === 0 ? (
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Proposals</CardTitle>
-            <CardDescription>Previously reviewed investment proposals</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {completedProposals.map((proposal) => {
-                const Icon = getAssetIcon(proposal.asset_name);
-                return (
-                  <div key={proposal.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-white">
-                        <Icon className="h-4 w-4 text-orange-500" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{proposal.proposal_type} {proposal.asset_name}</p>
-                        <p className="text-sm text-gray-500">
-                          {proposal.amount} units • ${parseFloat(proposal.total_value).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="text-right">
-                        <p className="text-sm">{new Date(proposal.client_decision_date || proposal.created_at).toLocaleDateString()}</p>
-                      </div>
-                      {getStatusBadge(proposal.status)}
-                    </div>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Proposals Yet</h3>
+            <p className="text-gray-500 text-center">
+              Your investment advisor will create personalized proposals for you.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6">
+          {proposals.map((proposal) => (
+            <Card key={proposal.id} className="overflow-hidden">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="flex items-center gap-2">
+                      {getStatusIcon(proposal.status)}
+                      {proposal.title}
+                    </CardTitle>
+                    <CardDescription>{proposal.description}</CardDescription>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                  {getStatusBadge(proposal.status)}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Investment Amount</p>
+                    <p className="text-lg font-bold">${proposal.investment_amount?.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Expected Return</p>
+                    <p className="text-lg font-bold text-green-600">{proposal.expected_return}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Risk Level</p>
+                    <p className="text-lg">{proposal.risk_level}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Created</p>
+                    <p className="text-lg">{new Date(proposal.created_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
 
-      {proposals.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-gray-500">No proposals available at this time.</p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-};
+                {proposal.digital_signature && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+                    <p className="text-sm font-medium text-green-800">Digital Signature Applied</p>
+                    <p className="text-sm text-green-600">{proposal.digital_signature}</p>
+                  </div>
+                )}
 
-const ProposalConfirmationDialog = ({ 
-  proposal, 
-  action, 
-  onConfirm, 
-  confirmationChecked, 
-  setConfirmationChecked 
-}: any) => {
-  return (
-    <div className="space-y-4">
-      <div className="p-4 bg-gray-50 rounded-lg">
-        <h4 className="font-medium mb-2">Proposal Summary</h4>
-        <div className="space-y-1 text-sm">
-          <p><strong>Action:</strong> {action.toUpperCase()}</p>
-          <p><strong>Asset:</strong> {proposal.asset_name}</p>
-          <p><strong>Amount:</strong> {proposal.amount} units</p>
-          <p><strong>Total Value:</strong> ${parseFloat(proposal.total_value).toLocaleString()}</p>
+                {proposal.client_decision_date && (
+                  <div className="mb-4">
+                    <p className="text-sm font-medium text-gray-500">Decision Date</p>
+                    <p className="text-sm">{new Date(proposal.client_decision_date).toLocaleString()}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  {proposal.file_url && (
+                    <Button variant="outline" size="sm">
+                      <Download className="mr-2 h-4 w-4" />
+                      Download PDF
+                    </Button>
+                  )}
+                  
+                  {proposal.status === "pending" && (
+                    <>
+                      <Button 
+                        onClick={() => handleAcceptProposal(proposal.id)}
+                        className="bg-green-600 hover:bg-green-700"
+                        size="sm"
+                      >
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Accept & Sign
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        onClick={() => handleRejectProposal(proposal.id)}
+                        size="sm"
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Decline
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </div>
-
-      {action === 'accept' && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <div className="flex items-start space-x-3">
-            <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
-            <div>
-              <h4 className="font-medium text-amber-800 mb-1">Legal Confirmation Required</h4>
-              <p className="text-sm text-amber-700 mb-3">
-                By accepting this proposal, you confirm that you understand the investment risks 
-                and authorize E-Bridge Capital to execute this transaction on your behalf.
-              </p>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="legal-confirmation"
-                  checked={confirmationChecked}
-                  onCheckedChange={setConfirmationChecked}
-                />
-                <Label htmlFor="legal-confirmation" className="text-sm text-amber-800">
-                  I confirm my full understanding and accept legal responsibility
-                </Label>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
-
-      <div className="flex space-x-3">
-        <Button 
-          variant="outline" 
-          className="flex-1"
-          onClick={() => setConfirmationChecked(false)}
-        >
-          Cancel
-        </Button>
-        <Button 
-          className={`flex-1 ${action === 'accept' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
-          onClick={() => onConfirm(proposal, action)}
-          disabled={action === 'accept' && !confirmationChecked}
-        >
-          {action === 'accept' ? 'Confirm & Accept' : 'Confirm Rejection'}
-        </Button>
-      </div>
     </div>
   );
 };
