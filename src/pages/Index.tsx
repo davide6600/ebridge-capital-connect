@@ -3,17 +3,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { Shield, TrendingUp, Users, Bitcoin, Building2, Globe2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from '@/components/AuthProvider';
 
 const Index = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Redirect authenticated users
+  if (user) {
+    if (user.email === "admin@ebridge.ee") {
+      navigate("/admin");
+    } else {
+      navigate("/dashboard");
+    }
+    return null;
+  }
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -32,26 +43,18 @@ const Index = () => {
       }
 
       if (data.user) {
-        localStorage.setItem("userEmail", email);
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!",
+        });
+        setIsLoginOpen(false);
         
-        // Check if admin
+        // Navigation will be handled by the auth state change
         if (email === "admin@ebridge.ee") {
-          localStorage.setItem("userRole", "admin");
-          toast({
-            title: "Login Successful",
-            description: "Welcome to the admin panel.",
-          });
           navigate("/admin");
         } else {
-          localStorage.setItem("userRole", "client");
-          localStorage.setItem("userName", data.user.user_metadata?.full_name || "Cliente");
-          toast({
-            title: "Login Successful",
-            description: "Welcome to your dashboard.",
-          });
           navigate("/dashboard");
         }
-        setIsLoginOpen(false);
       }
     } catch (error) {
       console.error('Login error:', error);
