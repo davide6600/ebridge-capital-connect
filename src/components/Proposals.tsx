@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,6 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import React from "react";
 
 const Proposals = () => {
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
@@ -27,13 +27,19 @@ const Proposals = () => {
   const [proposals, setProposals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load proposals from database
+  useEffect(() => {
+    loadProposals();
+  }, []);
+
   const loadProposals = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('proposals')
         .select('*')
         .eq('client_id', user.id)
@@ -102,7 +108,7 @@ const Proposals = () => {
       const digitalSignature = action === 'accept' ? 
         `0x${Math.random().toString(16).substr(2, 40)}` : null;
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('proposals')
         .update({
           status: action === 'accept' ? 'accepted' : 'rejected',
@@ -113,6 +119,12 @@ const Proposals = () => {
 
       if (error) {
         console.error('Error updating proposal:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update proposal. Please try again.",
+          variant: "destructive"
+        });
+        return;
       }
 
       toast({
@@ -160,13 +172,22 @@ const Proposals = () => {
     }
   };
 
+  const getAssetIcon = (assetName: string) => {
+    if (assetName.includes("Bitcoin") || assetName.includes("BTC")) {
+      return Bitcoin;
+    } else if (assetName.includes("ETF")) {
+      return BarChart3;
+    } else {
+      return TrendingUp;
+    }
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">Loading proposals...</div>;
+  }
+
   const pendingProposals = proposals.filter(p => p.status === "pending");
   const completedProposals = proposals.filter(p => p.status !== "pending");
-
-  // Load proposals on component mount
-  React.useEffect(() => {
-    loadProposals();
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -182,14 +203,14 @@ const Proposals = () => {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Pending Your Review</h2>
           <div className="grid gap-4">
             {pendingProposals.map((proposal) => {
-              const Icon = proposal.icon || Bitcoin;
+              const Icon = getAssetIcon(proposal.asset_name);
               return (
                 <Card key={proposal.id} className="border-l-4 border-l-yellow-400">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3">
-                        <div className={`p-2 rounded-lg bg-gray-100 ${proposal.color || 'text-gray-500'}`}>
-                          <Icon className="h-5 w-5" />
+                        <div className="p-2 rounded-lg bg-gray-100">
+                          <Icon className="h-5 w-5 text-orange-500" />
                         </div>
                         <div>
                           <CardTitle className="flex items-center space-x-2">
@@ -202,7 +223,7 @@ const Proposals = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold">${proposal.total_value.toLocaleString()}</p>
+                        <p className="text-2xl font-bold">${parseFloat(proposal.total_value).toLocaleString()}</p>
                         <p className="text-sm text-gray-500">
                           {proposal.amount} units @ ${proposal.price}
                         </p>
@@ -300,17 +321,17 @@ const Proposals = () => {
           <CardContent>
             <div className="space-y-3">
               {completedProposals.map((proposal) => {
-                const Icon = proposal.icon || Bitcoin;
+                const Icon = getAssetIcon(proposal.asset_name);
                 return (
                   <div key={proposal.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                     <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg bg-white ${proposal.color || 'text-gray-500'}`}>
-                        <Icon className="h-4 w-4" />
+                      <div className="p-2 rounded-lg bg-white">
+                        <Icon className="h-4 w-4 text-orange-500" />
                       </div>
                       <div>
                         <p className="font-medium">{proposal.proposal_type} {proposal.asset_name}</p>
                         <p className="text-sm text-gray-500">
-                          {proposal.amount} units • ${proposal.total_value.toLocaleString()}
+                          {proposal.amount} units • ${parseFloat(proposal.total_value).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -324,6 +345,14 @@ const Proposals = () => {
                 );
               })}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {proposals.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-gray-500">No proposals available at this time.</p>
           </CardContent>
         </Card>
       )}
@@ -346,7 +375,7 @@ const ProposalConfirmationDialog = ({
           <p><strong>Action:</strong> {action.toUpperCase()}</p>
           <p><strong>Asset:</strong> {proposal.asset_name}</p>
           <p><strong>Amount:</strong> {proposal.amount} units</p>
-          <p><strong>Total Value:</strong> ${proposal.total_value.toLocaleString()}</p>
+          <p><strong>Total Value:</strong> ${parseFloat(proposal.total_value).toLocaleString()}</p>
         </div>
       </div>
 

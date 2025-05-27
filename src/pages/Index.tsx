@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,58 +8,118 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { Shield, TrendingUp, Users, Bitcoin, Building2, Globe2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (email: string, password: string) => {
-    // Demo authentication logic
-    if (email === "admin@ebridge.ee" && password === "demo123") {
-      localStorage.setItem("userRole", "admin");
-      localStorage.setItem("userEmail", email);
-      toast({
-        title: "Login Successful",
-        description: "Welcome to the admin panel.",
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
-      navigate("/admin");
-    } else if (email === "cliente@ebridge.ee" && password === "demo123") {
-      localStorage.setItem("userRole", "client");
-      localStorage.setItem("userEmail", email);
-      localStorage.setItem("userName", "Marco Rossi");
-      toast({
-        title: "Login Successful",
-        description: "Welcome to your dashboard.",
-      });
-      navigate("/dashboard");
-    } else {
+
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data.user) {
+        localStorage.setItem("userEmail", email);
+        
+        // Check if admin
+        if (email === "admin@ebridge.ee") {
+          localStorage.setItem("userRole", "admin");
+          toast({
+            title: "Login Successful",
+            description: "Welcome to the admin panel.",
+          });
+          navigate("/admin");
+        } else {
+          localStorage.setItem("userRole", "client");
+          localStorage.setItem("userName", data.user.user_metadata?.full_name || "Cliente");
+          toast({
+            title: "Login Successful",
+            description: "Welcome to your dashboard.",
+          });
+          navigate("/dashboard");
+        }
+        setIsLoginOpen(false);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: "Login Failed",
-        description: "Invalid credentials. Please try again.",
+        description: "An error occurred during login.",
         variant: "destructive",
       });
     }
   };
 
-  const handleSignup = (email: string, password: string) => {
-    toast({
-      title: "Registration Successful",
-      description: "Please check your email for verification.",
-    });
-    setIsSignupOpen(false);
+  const handleSignup = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+
+      if (error) {
+        toast({
+          title: "Registration Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data.user) {
+        toast({
+          title: "Registration Successful",
+          description: "Please check your email for verification (if enabled).",
+        });
+        setIsSignupOpen(false);
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      toast({
+        title: "Registration Failed",
+        description: "An error occurred during registration.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleGoogleLogin = () => {
-    // Demo Google OAuth
-    localStorage.setItem("userRole", "client");
-    localStorage.setItem("userEmail", "demo@gmail.com");
-    localStorage.setItem("userName", "Demo User");
-    toast({
-      title: "Google Login Successful",
-      description: "Welcome to E-Bridge Capital.",
-    });
-    navigate("/dashboard");
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Google Login Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      toast({
+        title: "Google Login Failed",
+        description: "An error occurred during Google login.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -310,6 +369,14 @@ const SignupForm = ({ onSignup }: { onSignup: (email: string, password: string) 
       toast({
         title: "Error",
         description: "Passwords don't match",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
         variant: "destructive",
       });
       return;
