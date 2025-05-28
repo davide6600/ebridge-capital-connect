@@ -19,9 +19,11 @@ import {
   Bot
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import CreateTicket from "./CreateTicket";
 
 const Support = () => {
   const [message, setMessage] = useState("");
+  const [showCreateTicket, setShowCreateTicket] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -131,6 +133,10 @@ const Support = () => {
         return <Badge variant="outline">Normal</Badge>;
     }
   };
+
+  if (showCreateTicket) {
+    return <CreateTicket onBack={() => setShowCreateTicket(false)} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -256,7 +262,11 @@ const Support = () => {
                   </div>
                 ))}
               </div>
-              <Button variant="outline" className="w-full mt-4">
+              <Button 
+                variant="outline" 
+                className="w-full mt-4"
+                onClick={() => setShowCreateTicket(true)}
+              >
                 Create New Ticket
               </Button>
             </CardContent>
