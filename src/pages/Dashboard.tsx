@@ -2,16 +2,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '@/components/AuthProvider';
-import { ProfileTest } from '@/components/ProfileTest';
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ClientLayout from "@/components/ClientLayout";
+import DashboardHome from "@/components/DashboardHome";
+import Portfolio from "@/components/Portfolio";
+import Documents from "@/components/Documents";
+import Proposals from "@/components/Proposals";
+import Support from "@/components/Support";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState("portfolio");
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -19,20 +22,18 @@ const Dashboard = () => {
     }
   }, [user, loading, navigate]);
 
-  const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        navigate("/");
-      }
-    } catch (error) {
-      console.error('Sign out error:', error);
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "portfolio":
+        return <Portfolio />;
+      case "documents":
+        return <Documents />;
+      case "proposals":
+        return <Proposals />;
+      case "support":
+        return <Support />;
+      default:
+        return <DashboardHome />;
     }
   };
 
@@ -46,32 +47,9 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Welcome, {user.email}!
-            </h1>
-            <Button onClick={handleSignOut} variant="outline">
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </div>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ClientLayout activeTab={activeTab} onTabChange={setActiveTab}>
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4">Account Information</h2>
-              <p className="text-gray-600">Email: {user.email}</p>
-              <p className="text-gray-600">User ID: {user.id}</p>
-            </div>
-            
-            <ProfileTest />
-          </div>
-        </ClientLayout>
-      </div>
+      <ClientLayout activeTab={activeTab} onTabChange={setActiveTab}>
+        {renderTabContent()}
+      </ClientLayout>
     </div>
   );
 };

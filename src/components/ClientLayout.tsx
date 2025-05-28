@@ -24,6 +24,8 @@ import {
   Shield
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -33,17 +35,24 @@ interface ClientLayoutProps {
 
 const ClientLayout = ({ children, activeTab, onTabChange }: ClientLayoutProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const userName = localStorage.getItem("userName") || "Client";
-  const userEmail = localStorage.getItem("userEmail") || "";
 
-  const handleLogout = () => {
-    localStorage.clear();
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   const menuItems = [
@@ -103,12 +112,12 @@ const ClientLayout = ({ children, activeTab, onTabChange }: ClientLayoutProps) =
                     <Avatar className="h-8 w-8">
                       <AvatarImage src="" />
                       <AvatarFallback className="bg-blue-100 text-blue-600">
-                        {userName.charAt(0).toUpperCase()}
+                        {user?.email?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="hidden sm:block text-left">
-                      <p className="text-sm font-medium text-gray-900">{userName}</p>
-                      <p className="text-xs text-gray-500">{userEmail}</p>
+                      <p className="text-sm font-medium text-gray-900">{user?.email || 'User'}</p>
+                      <p className="text-xs text-gray-500">Client</p>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
