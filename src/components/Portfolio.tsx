@@ -135,15 +135,15 @@ const Portfolio = () => {
       {/* Portfolio Header */}
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Portfolio Overview</h1>
-          <p className="text-gray-600 mt-1">Track your investment performance and allocation</p>
+          <h1 className="text-2xl font-bold text-gray-900">Portfolio Overview</h1>
+          <p className="text-sm text-gray-600 mt-1">Track your investment performance and allocation</p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline" onClick={handleExportReport}>
+          <Button variant="outline" onClick={handleExportReport} className="text-sm">
             <Download className="mr-2 h-4 w-4" />
             Export Report
           </Button>
-          <Button onClick={() => setShowAnalytics(true)}>
+          <Button onClick={() => setShowAnalytics(true)} className="text-sm">
             <Eye className="mr-2 h-4 w-4" />
             View Analytics
           </Button>
@@ -154,11 +154,11 @@ const Portfolio = () => {
       <div className="grid md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs font-medium">Total Value</CardTitle>
+            <DollarSign className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalValue.toLocaleString()}</div>
+            <div className="text-xl font-bold">${totalValue.toLocaleString()}</div>
             <p className={`text-xs ${dailyChange >= 0 ? 'text-green-600' : 'text-red-600'} flex items-center mt-1`}>
               {dailyChange >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
               {dailyChange >= 0 ? '+' : ''}${Math.abs(dailyChange).toLocaleString()} ({dailyChangePercent}%)
@@ -168,11 +168,11 @@ const Portfolio = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total P&L</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs font-medium">Total P&L</CardTitle>
+            <TrendingUp className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">+$18,430</div>
+            <div className="text-xl font-bold text-green-600">+$18,430</div>
             <p className="text-xs text-muted-foreground">
               +17.2% since inception
             </p>
@@ -181,11 +181,11 @@ const Portfolio = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Best Performer</CardTitle>
-            <Bitcoin className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs font-medium">Best Performer</CardTitle>
+            <Bitcoin className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">BTC</div>
+            <div className="text-xl font-bold">BTC</div>
             <p className="text-xs text-green-600">
               +24.5% this month
             </p>
@@ -194,11 +194,11 @@ const Portfolio = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Diversification</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs font-medium">Diversification</CardTitle>
+            <BarChart3 className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-xl font-bold">3</div>
             <p className="text-xs text-muted-foreground">
               Asset classes
             </p>
@@ -209,8 +209,8 @@ const Portfolio = () => {
       {/* Holdings */}
       <Card>
         <CardHeader>
-          <CardTitle>Current Holdings</CardTitle>
-          <CardDescription>Your active investment positions</CardDescription>
+          <CardTitle className="text-lg">Current Holdings</CardTitle>
+          <CardDescription className="text-sm">Your active investment positions</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -221,23 +221,23 @@ const Portfolio = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <div className={`p-2 rounded-lg bg-gray-100 ${holding.color}`}>
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-4 w-4" />
                       </div>
                       <div>
-                        <h3 className="font-semibold">{holding.name}</h3>
-                        <p className="text-sm text-gray-500">{holding.symbol}</p>
+                        <h3 className="text-sm font-semibold">{holding.name}</h3>
+                        <p className="text-xs text-gray-500">{holding.symbol}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">${holding.value.toLocaleString()}</p>
-                      <p className={`text-sm ${holding.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <p className="text-sm font-semibold">${holding.value.toLocaleString()}</p>
+                      <p className={`text-xs ${holding.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {holding.change >= 0 ? '+' : ''}{holding.change}%
                       </p>
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-xs">
                       <span>Amount: {holding.amount}</span>
                       <span>Allocation: {holding.allocation}%</span>
                     </div>
@@ -253,8 +253,8 @@ const Portfolio = () => {
       {/* Recent Transactions */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-          <CardDescription>Your latest trading activity</CardDescription>
+          <CardTitle className="text-lg">Recent Transactions</CardTitle>
+          <CardDescription className="text-sm">Your latest trading activity</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -263,20 +263,20 @@ const Portfolio = () => {
                 <div className="flex items-center space-x-3">
                   <Badge 
                     variant={transaction.type === "BUY" ? "default" : "secondary"}
-                    className={transaction.type === "BUY" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                    className={`text-xs ${transaction.type === "BUY" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                   >
                     {transaction.type}
                   </Badge>
                   <div>
-                    <p className="font-medium">{transaction.asset}</p>
-                    <p className="text-sm text-gray-500">{transaction.amount} units</p>
+                    <p className="text-sm font-medium">{transaction.asset}</p>
+                    <p className="text-xs text-gray-500">{transaction.amount} units</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">${transaction.price.toLocaleString()}</p>
+                  <p className="text-sm font-medium">${transaction.price.toLocaleString()}</p>
                   <div className="flex items-center space-x-2">
-                    <p className="text-sm text-gray-500">{transaction.date}</p>
-                    <Badge variant={transaction.status === "Completed" ? "default" : "secondary"}>
+                    <p className="text-xs text-gray-500">{transaction.date}</p>
+                    <Badge variant={transaction.status === "Completed" ? "default" : "secondary"} className="text-xs">
                       {transaction.status}
                     </Badge>
                   </div>
