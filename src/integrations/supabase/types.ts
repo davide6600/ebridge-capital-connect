@@ -9,6 +9,165 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assets: {
+        Row: {
+          amount: number
+          average_price: number
+          created_at: string
+          current_price: number
+          id: string
+          name: string
+          symbol: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          average_price?: number
+          created_at?: string
+          current_price?: number
+          id?: string
+          name: string
+          symbol: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          average_price?: number
+          created_at?: string
+          current_price?: number
+          id?: string
+          name?: string
+          symbol?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      investment_proposals: {
+        Row: {
+          additional_notes: string | null
+          admin_notes: string | null
+          created_at: string
+          description: string
+          expected_return: string | null
+          id: string
+          investment_amount: number
+          risk_level: string
+          status: string
+          time_horizon: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_notes?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          description: string
+          expected_return?: string | null
+          id?: string
+          investment_amount: number
+          risk_level: string
+          status?: string
+          time_horizon?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_notes?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          description?: string
+          expected_return?: string | null
+          id?: string
+          investment_amount?: number
+          risk_level?: string
+          status?: string
+          time_horizon?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      portfolio_analytics: {
+        Row: {
+          created_at: string
+          daily_change: number
+          daily_change_percent: number
+          date: string
+          id: string
+          total_value: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_change: number
+          daily_change_percent: number
+          date: string
+          id?: string
+          total_value: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_change?: number
+          daily_change_percent?: number
+          date?: string
+          id?: string
+          total_value?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -33,6 +192,45 @@ export type Database = {
           updated_at?: string
           username?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          asset_symbol: string
+          created_at: string
+          fees: number | null
+          id: string
+          price: number
+          status: string
+          total_value: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          asset_symbol: string
+          created_at?: string
+          fees?: number | null
+          id?: string
+          price: number
+          status?: string
+          total_value: number
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          asset_symbol?: string
+          created_at?: string
+          fees?: number | null
+          id?: string
+          price?: number
+          status?: string
+          total_value?: number
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }

@@ -10,6 +10,7 @@ import Portfolio from "@/components/Portfolio";
 import Documents from "@/components/Documents";
 import Proposals from "@/components/Proposals";
 import Support from "@/components/Support";
+import ProfileSettings from "@/components/ProfileSettings";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -32,8 +33,10 @@ const Dashboard = () => {
         return <Proposals />;
       case "support":
         return <Support />;
+      case "profile":
+        return <ProfileSettings />;
       default:
-        return <DashboardHome />;
+        return <DashboardHome onTabChange={setActiveTab} />;
     }
   };
 
