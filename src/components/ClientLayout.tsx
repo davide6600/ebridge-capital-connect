@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { NotificationCenter } from './NotificationCenter';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -95,6 +95,9 @@ const ClientLayout = ({ children, activeTab, onTabChange }: ClientLayoutProps) =
 
             {/* User Menu */}
             <div className="flex items-center space-x-4">
+              {/* Notification Center */}
+              <NotificationCenter />
+
               {/* Mobile menu button */}
               <Button
                 variant="ghost"

@@ -301,8 +301,68 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="py-8 px-4 bg-black/20 border-t border-white/10">
-        <div className="container mx-auto text-center text-gray-400">
-          <p>&copy; 2024 E-Bridge Capital OÜ. All rights reserved. Regulated investment services in Estonia.</p>
+        <div className="container mx-auto">
+          <div className="grid md:grid-cols-4 gap-8 mb-6">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <Building2 className="h-6 w-6 text-yellow-400" />
+                <span className="text-lg font-bold text-white">E-Bridge Capital</span>
+              </div>
+              <p className="text-gray-400 text-sm">
+                Servizi di investimento professionale per Bitcoin, ETF e azioni premium. 
+                Regolamentato in Estonia.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="text-white font-semibold mb-3">Servizi</h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li>Gestione Portafoglio</li>
+                <li>Bitcoin Investment</li>
+                <li>ETF Premium</li>
+                <li>Consulenza Investimenti</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="text-white font-semibold mb-3">Supporto</h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li>Centro Assistenza</li>
+                <li>Documentazione</li>
+                <li>Contatti</li>
+                <li>FAQ</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="text-white font-semibold mb-3">Legale</h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li>
+                  <a href="/privacy" className="hover:text-white transition-colors">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="/terms" className="hover:text-white transition-colors">
+                    Termini di Servizio
+                  </a>
+                </li>
+                <li>Conformità Regolamentare</li>
+                <li>KYC/AML</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-white/10 pt-6 text-center">
+            <p className="text-gray-400 text-sm">
+              &copy; 2024 E-Bridge Capital OÜ. Tutti i diritti riservati. 
+              Servizi di investimento regolamentati in Estonia.
+            </p>
+            <p className="text-gray-500 text-xs mt-2">
+              Reg. No: 16284943 | Licenza Attività Digitali: FVT000XXX | 
+              Email: info@ebridge.ee | Tel: +372 6000 000
+            </p>
+          </div>
         </div>
       </footer>
     </div>
