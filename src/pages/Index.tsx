@@ -165,7 +165,7 @@ const Index = () => {
                     Join E-Bridge Capital and start your investment journey
                   </DialogDescription>
                 </DialogHeader>
-                <SignupForm onSignup={handleSignup} />
+                <SignupForm onSignup={handleSignup} onGoogleLogin={handleGoogleLogin} />
               </DialogContent>
             </Dialog>
           </div>
@@ -362,7 +362,7 @@ const LoginForm = ({ onLogin, onGoogleLogin }: { onLogin: (email: string, passwo
   );
 };
 
-const SignupForm = ({ onSignup }: { onSignup: (email: string, password: string) => void }) => {
+const SignupForm = ({ onSignup, onGoogleLogin }: { onSignup: (email: string, password: string) => void, onGoogleLogin: () => void }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -421,6 +421,23 @@ const SignupForm = ({ onSignup }: { onSignup: (email: string, password: string) 
       </div>
       <Button className="w-full" onClick={handleSubmit}>
         Create Account
+      </Button>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
+      <Button 
+        variant="outline" 
+        className="w-full" 
+        onClick={onGoogleLogin}
+      >
+        Continue with Google
       </Button>
     </div>
   );
