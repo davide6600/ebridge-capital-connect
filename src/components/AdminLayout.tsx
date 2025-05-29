@@ -1,4 +1,29 @@
 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  Building2, 
+  Users, 
+  FileText, 
+  TrendingUp, 
+  BarChart3, 
+  LogOut,
+  Menu,
+  X,
+  Settings,
+  Shield
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
